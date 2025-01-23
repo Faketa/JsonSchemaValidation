@@ -24,6 +24,9 @@ git clone https://github.com/Faketa/JsonSchemaValidation.git
 
 ### Prerequisites
 - .NET 8.0 or later.
+- **Dependencies**:
+  - `Newtonsoft.Json`: For JSON serialization and deserialization.
+  - `Microsoft.Extensions.Logging`: For structured logging.
 
 ### Example Usage
 
@@ -94,14 +97,31 @@ Unit tests for all major components are included using NUnit 3. To run the tests
 ## Architecture
 
 ### Core Components
-- **JsonValidator:** Orchestrates the validation process.
-- **SchemaReader:** Reads and deserializes schema definitions.
-- **InputProcessor:** Processes input data in manageable chunks.
-- **ResultWriter:** Writes validation results to output files.
+1. **ValidationConfiguration**
+   - Configures the chunk size and validation rules for the library.
 
-### Validation Rules
-- **LengthValidationRule:** Ensures field values do not exceed the defined maximum length.
-- **MandatoryValidationRule:** Ensures mandatory fields are present and non-empty.
+2. **SchemaReader**
+   - Reads and deserializes the schema from a JSON file.
+
+3. **InputProcessor**
+   - Splits the input JSON data into chunks for processing.
+
+4. **ResultWriter**
+   - Writes validation results to an output file in JSON format.
+
+5. **JsonValidator**
+   - The main class that orchestrates schema validation, input processing, and result writing.
+
+### Custom Validation Rules
+The library supports creating custom rules by implementing the `IValidationRule` interface. Two default rules are included:
+- **LengthValidationRule**: Validates that a field does not exceed a specified length.
+- **MandatoryValidationRule**: Ensures that a field is not null or empty if marked as mandatory.
+
+### Flow Diagram
+1. Read the schema using `SchemaReader`.
+2. Process input data in chunks using `InputProcessor`.
+3. Validate each record in a chunk against the schema.
+4. Write validation results to an output file using `ResultWriter`.
 
 ### Folder Structure
 ```plaintext
@@ -120,6 +140,20 @@ src/
 └── Configuration/
     └── ValidationConfiguration.cs
 ```
+
+## Customization
+To add a new validation rule, implement the `IValidationRule` interface:
+```csharp
+public class CustomRule : IValidationRule
+{
+    public ValidationResult Validate(string fieldName, string fieldValue, SchemaField schemaField)
+    {
+        // Custom validation logic
+        return ValidationResult.Success(fieldName);
+    }
+}
+```
+Then include it in the `ValidationConfiguration.ValidationRules` collection.
 
 ## Contributing
 Contributions are welcome! Please follow these steps:

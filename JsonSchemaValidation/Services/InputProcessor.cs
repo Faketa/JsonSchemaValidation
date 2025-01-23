@@ -22,10 +22,12 @@ public class InputProcessor
     /// <param name="chunkSize">The maximum number of records per chunk.</param>
     /// <param name="cancellationToken">A token to observe while waiting for the task to complete.</param>
     /// <returns>An enumerable of chunks containing deserialized records.</returns>
-    /// <exception cref="Exception">Logs errors related to malformed data or stream issues.</exception>
-    public async Task<IEnumerable<List<Dictionary<string, string>>>> ChunkInputAsync(Stream inputDataStream,
-        int chunkSize, CancellationToken cancellationToken)
+    /// <exception cref="OperationCanceledException">Thrown when the operation is canceled.</exception>
+    public async Task<IEnumerable<List<Dictionary<string, string>>>> ChunkInputAsync(Stream inputDataStream, int chunkSize, CancellationToken cancellationToken)
     {
+        if (inputDataStream == null)
+            throw new ArgumentNullException(nameof(inputDataStream), "Input data stream cannot be null.");
+        
         var chunks = new List<List<Dictionary<string, string>>>();
         try
         {
@@ -39,6 +41,8 @@ public class InputProcessor
             {
                 while (await jsonReader.ReadAsync(cancellationToken))
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+
                     if (jsonReader.TokenType == JsonToken.StartObject)
                     {
                         try
@@ -74,6 +78,8 @@ public class InputProcessor
             else if (jsonReader.TokenType == JsonToken.StartObject)
             {
                 // Handle single object JSON
+                cancellationToken.ThrowIfCancellationRequested();
+
                 try
                 {
                     var record = serializer.Deserialize<Dictionary<string, string>>(jsonReader);
@@ -91,6 +97,11 @@ public class InputProcessor
             {
                 _logger.LogError("Input JSON is neither an array nor a valid object.");
             }
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogInformation("Operation was canceled.");
+            throw;
         }
         catch (Exception ex)
         {

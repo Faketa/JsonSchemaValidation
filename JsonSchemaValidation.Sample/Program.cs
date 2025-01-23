@@ -24,4 +24,4 @@ var validator = new JsonValidator(configuration, logger);
 var cancellationTokenSource = new CancellationTokenSource();
 var cancellationToken = cancellationTokenSource.Token;
 
-await validator.ValidateAndProcessAsync("../../../schema.json", "../../../input.json", "../../../output.json", cancellationToken);
+await validator.ValidateAndProcessAsync("../../../schema.json", "../../../input-object.json", "../../../output.json", cancellationToken);

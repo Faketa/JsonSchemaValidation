@@ -24,28 +24,36 @@ public class ResultWriter
     /// <param name="cancellationToken">A token to observe while waiting for the task to complete.</param>
     /// <returns>A task representing the asynchronous write operation.</returns>
     /// <exception cref="Exception">Logs errors related to file writing issues.</exception>
-    public async Task WriteResultsAsync(string outputPath, IEnumerable<ValidationResult> results,
-        CancellationToken cancellationToken)
+    public async Task WriteResultsAsync(string outputPath, IEnumerable<ValidationResult> results, CancellationToken cancellationToken)
     {
+        if (outputPath == null)
+        {
+            throw new ArgumentNullException(nameof(outputPath), "Output path cannot be null.");
+        }
+
         try
         {
-            await using var outputStream = File.Create(outputPath);
+            await using var outputStream = new FileStream(outputPath, FileMode.Create, FileAccess.Write, FileShare.None, 4096, true);
             await using var writer = new StreamWriter(outputStream);
 
             var serializedResults = JsonConvert.SerializeObject(results, Formatting.Indented);
 
             foreach (char chunk in serializedResults)
             {
-                cancellationToken.ThrowIfCancellationRequested(); // Check for cancellation
+                cancellationToken.ThrowIfCancellationRequested();
                 await writer.WriteAsync(chunk.ToString());
             }
 
-            await writer.FlushAsync();
             _logger.LogInformation($"Results successfully written to {outputPath}.");
         }
         catch (OperationCanceledException)
         {
-            _logger.LogWarning("Write operation was canceled.");
+            _logger.LogInformation("Write operation was canceled.");
+            if (File.Exists(outputPath))
+            {
+                File.Delete(outputPath); // Remove incomplete file if operation was canceled.
+            }
+            throw;
         }
         catch (Exception ex)
         {

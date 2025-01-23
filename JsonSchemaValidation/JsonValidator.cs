@@ -20,6 +20,9 @@ public class JsonValidator
 
     public JsonValidator(ValidationConfiguration configuration, ILogger logger)
     {
+        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration), "Validation configuration cannot be null.");
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger), "Logger cannot be null.");
+
         _configuration = configuration;
         _validationRules = new ConstraintValidator(configuration.ValidationRules);
         _schemaReader = new SchemaReader(logger);
@@ -39,10 +42,28 @@ public class JsonValidator
     /// <exception cref="T:System.IO.FileNotFoundException">The specified file cannot be found.</exception>
     public async Task ValidateAndProcessAsync(string schemaPath, string inputDataPath, string outputPath, CancellationToken cancellationToken)
     {
-        //schemaPath = schemaPath ?? throw new ArgumentNullException(nameof(schemaPath));
-        //inputDataPath = inputDataPath ?? throw new ArgumentNullException(nameof(inputDataPath));
+        schemaPath = schemaPath ?? throw new ArgumentNullException(nameof(schemaPath));
+        inputDataPath = inputDataPath ?? throw new ArgumentNullException(nameof(inputDataPath));
 
         await using var schemaStream = File.OpenRead(schemaPath);
+        await using var inputStream = File.OpenRead(inputDataPath);
+
+        await ValidateAndProcessAsync(schemaStream, inputStream, outputPath, cancellationToken);
+    }
+
+    /// <summary>
+    /// Validates input data against a schema and writes results to an output file.
+    /// </summary>
+    /// <param name="schemaPath">The stream containing the schema JSON.</param>
+    /// <param name="inputDataPath">The stream containing the input JSON data.</param>
+    /// <param name="outputPath">The path to the output file.</param>
+    /// <returns>A task representing the asynchronous validation and writing process.</returns>
+    /// <exception cref="T:System.IO.DirectoryNotFoundException">Part of the filename or directory cannot be found.</exception>
+    /// <exception cref="T:System.IO.FileNotFoundException">The specified file cannot be found.</exception>
+    public async Task ValidateAndProcessAsync(Stream schemaStream, Stream inputStream, string outputPath, CancellationToken cancellationToken)
+    {
+        schemaStream = schemaStream ?? throw new ArgumentNullException(nameof(schemaStream));
+        inputStream = inputStream ?? throw new ArgumentNullException(nameof(inputStream));
 
         var schema = await _schemaReader.ReadSchemaAsync(schemaStream, cancellationToken);
         if (schema == null)
@@ -51,9 +72,13 @@ public class JsonValidator
             return;
         }
 
-        await using var inputStream = File.OpenRead(inputDataPath);
-
         var chunks = await _inputProcessor.ChunkInputAsync(inputStream, _configuration.ChunkSize, cancellationToken);
+        if (chunks == null || !chunks.Any())
+        {
+            _logger.LogError("Input JSON is empty.");
+            return;
+        }
+
         var results = new ConcurrentBag<ValidationResult>();
 
         foreach (var chunk in chunks)

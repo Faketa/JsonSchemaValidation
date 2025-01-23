@@ -1,0 +1,14 @@
+{
+                    "name": {
+                              "length": 50,
+                              "mandatory": true
+                    },
+                    "age": {
+                              "length": 3,
+                              "mandatory": false
+                    },
+                    "email": {
+                              "length": 100,
+                              "mandatory": true
+                    }
+}
