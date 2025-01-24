@@ -23,6 +23,7 @@ public class InputProcessor
     /// <param name="cancellationToken">A token to observe while waiting for the task to complete.</param>
     /// <returns>An enumerable of chunks containing deserialized records.</returns>
     /// <exception cref="OperationCanceledException">Thrown when the operation is canceled.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when the inputDataStream is null.</exception>
     public async Task<IEnumerable<List<Dictionary<string, string>>>> ChunkInputAsync(Stream inputDataStream, int chunkSize, CancellationToken cancellationToken)
     {
         if (inputDataStream == null)

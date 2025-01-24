@@ -1,6 +1,5 @@
 ﻿namespace JsonSchemaValidation;
 
-// Configuration class
 /// <summary>
 /// Provides configuration for chunk size and validation rules.
 /// </summary>

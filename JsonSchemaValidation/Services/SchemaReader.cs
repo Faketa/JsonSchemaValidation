@@ -20,8 +20,12 @@ namespace JsonSchemaValidation.Services
         /// Reads a schema from the provided stream and deserializes it into a dictionary.
         /// </summary>
         /// <param name="schemaStream">The stream containing the schema JSON.</param>
+        /// <param name="cancellationToken">A token to observe while waiting for the task to complete.</param>
         /// <returns>A dictionary representing the schema, or null if deserialization fails.</returns>
         /// <exception cref="InvalidOperationException">Thrown if the schema is null or malformed.</exception>
+        /// <exception cref="ArgumentNullException">Thrown when the schemaStream is null.</exception>
+        /// <exception cref="OperationCanceledException">Thrown when the operation is canceled.</exception>
+        /// <exception cref="JsonException">Thrown when the Schema is malformed JSON</exception>
         public async Task<Dictionary<string, SchemaField>?> ReadSchemaAsync(Stream schemaStream, CancellationToken cancellationToken)
         {
             if (schemaStream == null)

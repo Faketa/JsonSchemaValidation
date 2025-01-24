@@ -24,6 +24,8 @@ public class ResultWriter
     /// <param name="cancellationToken">A token to observe while waiting for the task to complete.</param>
     /// <returns>A task representing the asynchronous write operation.</returns>
     /// <exception cref="Exception">Logs errors related to file writing issues.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when the outputPath is null.</exception>
+    /// <exception cref="OperationCanceledException">Thrown when the operation is canceled.</exception>
     public async Task WriteResultsAsync(string outputPath, IEnumerable<ValidationResult> results, CancellationToken cancellationToken)
     {
         if (outputPath == null)

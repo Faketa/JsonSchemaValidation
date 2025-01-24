@@ -7,7 +7,7 @@ using JsonSchemaValidation.Services;
 namespace JsonSchemaValidation;
 
 /// <summary>
-/// Main service for orchestrating schema validation and input processing.
+/// Main service for schema validation, input processing and result writer.
 /// </summary>
 public class JsonValidator
 {
@@ -18,6 +18,11 @@ public class JsonValidator
     private readonly ResultWriter _resultWriter;
     private readonly ILogger _logger;
 
+    /// <summary>
+    /// Constructor
+    /// </summary>
+    /// <param name="configuration">Validation configuration</param>
+    /// <param name="logger">Microsoft Logger</param>
     public JsonValidator(ValidationConfiguration configuration, ILogger logger)
     {
         _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration), "Validation configuration cannot be null.");
@@ -34,9 +39,10 @@ public class JsonValidator
     /// <summary>
     /// Validates input data against a schema and writes results to an output file.
     /// </summary>
-    /// <param name="schemaPath">The stream containing the schema JSON.</param>
-    /// <param name="inputDataPath">The stream containing the input JSON data.</param>
+    /// <param name="schemaPath">The path containing the schema JSON.</param>
+    /// <param name="inputDataPath">The path containing the input JSON data.</param>
     /// <param name="outputPath">The path to the output file.</param>
+    /// <param name="cancellationToken">The Cancellation Token</param>
     /// <returns>A task representing the asynchronous validation and writing process.</returns>
     /// <exception cref="T:System.IO.DirectoryNotFoundException">Part of the filename or directory cannot be found.</exception>
     /// <exception cref="T:System.IO.FileNotFoundException">The specified file cannot be found.</exception>
@@ -57,6 +63,7 @@ public class JsonValidator
     /// <param name="schemaPath">The stream containing the schema JSON.</param>
     /// <param name="inputDataPath">The stream containing the input JSON data.</param>
     /// <param name="outputPath">The path to the output file.</param>
+    /// <param name="cancellationToken">The Cancellation Token</param>
     /// <returns>A task representing the asynchronous validation and writing process.</returns>
     /// <exception cref="T:System.IO.DirectoryNotFoundException">Part of the filename or directory cannot be found.</exception>
     /// <exception cref="T:System.IO.FileNotFoundException">The specified file cannot be found.</exception>
@@ -90,7 +97,7 @@ public class JsonValidator
     }
 
     /// <summary>
-    /// Validates a single chunk of input records.
+    /// Parallel validation a single chunk of input records.
     /// </summary>
     /// <param name="chunk">The chunk of input records to validate.</param>
     /// <param name="schema">The schema to validate against.</param>
