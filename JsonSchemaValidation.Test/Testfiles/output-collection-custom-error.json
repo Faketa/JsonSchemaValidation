@@ -1,0 +1,47 @@
+[
+  {
+    "Field": "email",
+    "IsValid": true,
+    "ErrorMessage": null
+  },
+  {
+    "Field": "age",
+    "IsValid": true,
+    "ErrorMessage": null
+  },
+  {
+    "Field": "name",
+    "IsValid": true,
+    "ErrorMessage": null
+  },
+  {
+    "Field": "email",
+    "IsValid": true,
+    "ErrorMessage": null
+  },
+  {
+    "Field": "age",
+    "IsValid": true,
+    "ErrorMessage": null
+  },
+  {
+    "Field": "name",
+    "IsValid": true,
+    "ErrorMessage": null
+  },
+  {
+    "Field": "email",
+    "IsValid": true,
+    "ErrorMessage": null
+  },
+  {
+    "Field": "age",
+    "IsValid": false,
+    "ErrorMessage": "My Custom error message."
+  },
+  {
+    "Field": "name",
+    "IsValid": true,
+    "ErrorMessage": null
+  }
+]

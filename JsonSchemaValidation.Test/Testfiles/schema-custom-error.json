@@ -1,0 +1,15 @@
+{
+    "name": {
+        "length": 50,
+        "mandatory": true
+    },
+    "age": {
+        "length": 3,
+        "mandatory": false,
+        "LengthErrorMessage": "My Custom error message."
+    },
+    "email": {
+        "length": 100,
+        "mandatory": true
+    }
+}

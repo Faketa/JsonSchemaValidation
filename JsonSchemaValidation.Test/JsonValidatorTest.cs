@@ -43,9 +43,10 @@ namespace JsonSchemaValidation.Test
             // Arrange
             var schemaJson = "{" +
                              "  \"name\": { \"Length\": 10, \"Mandatory\": true }," +
-                             "  \"email\": { \"Length\": 50, \"Mandatory\": true }" +
+                             "  \"email\": { \"Length\": 50, \"Mandatory\": true }," +
+                             "  \"age\": { \"Length\": 3, \"Mandatory\": false }" +
                              "}";
-            var inputJson = "[{ \"name\": \"John\", \"email\": \"john@example.com\" }]";
+            var inputJson = "[{ \"name\": \"John\", \"email\": \"john@example.com\", \"age\": \"30\" }]";
 
             using var schemaStream = new MemoryStream(Encoding.UTF8.GetBytes(schemaJson));
             using var inputDataStream = new MemoryStream(Encoding.UTF8.GetBytes(inputJson));
@@ -58,7 +59,7 @@ namespace JsonSchemaValidation.Test
             Assert.IsTrue(File.Exists(outputPath));
 
             var outputContent = await File.ReadAllTextAsync(outputPath);
-            //Assert.That(outputContent, Does.Contain("IsValid": true));
+            Assert.That(outputContent, Does.Contain("\"IsValid\": true"));
 
             // Cleanup
             File.Delete(outputPath);

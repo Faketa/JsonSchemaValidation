@@ -31,7 +31,8 @@ namespace JsonSchemaValidation.Test
             // Arrange
             var schemaJson = "{" +
                              "  \"name\": { \"Length\": 10, \"Mandatory\": true }," +
-                             "  \"email\": { \"Length\": 50, \"Mandatory\": true }" +
+                             "  \"email\": { \"Length\": 50, \"Mandatory\": true }," +
+                             "  \"age\": { \"Length\": 3, \"Mandatory\": false }" +
                              "}";
             using var schemaStream = new MemoryStream(Encoding.UTF8.GetBytes(schemaJson));
 
@@ -40,9 +41,10 @@ namespace JsonSchemaValidation.Test
 
             // Assert
             Assert.IsNotNull(result);
-            Assert.AreEqual(2, result.Count);
+            Assert.AreEqual(3, result.Count);
             Assert.IsTrue(result.ContainsKey("name"));
             Assert.IsTrue(result.ContainsKey("email"));
+            Assert.IsTrue(result.ContainsKey("age"));
         }
 
         [Test]

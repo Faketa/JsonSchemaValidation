@@ -31,9 +31,9 @@ namespace JsonSchemaValidation.Test
         {
             // Arrange
             var inputJson = "[" +
-                            "{\"name\":\"John\",\"age\":\"30\"}," +
-                            "{\"name\":\"Jane\",\"age\":\"25\"}," +
-                            "{\"name\":\"Doe\",\"age\":\"40\"}" +
+                            "{\"name\":\"John\",\"email\":\"John.Doe@example.com\",\"age\":\"30\"}," +
+                            "{\"name\":\"Jane\",\"email\":\"John.Doe@example.com\",\"age\":\"25\"}," +
+                            "{\"name\":\"Doe\",\"email\":\"John.Doe@example.com\",\"age\":\"40\"}" +
                             "]";
             using var inputDataStream = new MemoryStream(Encoding.UTF8.GetBytes(inputJson));
 
@@ -50,7 +50,7 @@ namespace JsonSchemaValidation.Test
         public async Task ChunkInputAsync_SingleObjectInput_ShouldReturnSingleChunk()
         {
             // Arrange
-            var inputJson = "{\"name\":\"John\",\"age\":\"30\"}";
+            var inputJson = "{\"name\":\"John\",\"email\":\"John.doe@example.com\",\"age\":\"30\"}";
             using var inputDataStream = new MemoryStream(Encoding.UTF8.GetBytes(inputJson));
 
             // Act
@@ -110,8 +110,8 @@ namespace JsonSchemaValidation.Test
         {
             // Arrange
             var inputJson = "[" +
-                            "{\"name\":\"John\",\"age\":\"30\"}," +
-                            "{\"name\":\"Jane\",\"age\":\"25\"}" +
+                            "{\"name\":\"John\",\"email\":\"john.doe@example.com\",\"age\":\"30\"}," +
+                            "{\"name\":\"Jane\",\"email\":\"Jane.doe@example.com\",\"age\":\"25\"}" +
                             "]";
             using var inputDataStream = new MemoryStream(Encoding.UTF8.GetBytes(inputJson));
             var cts = new CancellationTokenSource();
@@ -134,10 +134,11 @@ namespace JsonSchemaValidation.Test
         {
             // Arrange
             var inputJson = new StringBuilder("[");
-            for (int i = 0; i < 1000; i++)
+            for (int i = 0; i < 10000; i++)
             {
-                inputJson.Append($"{{\"name\":\"User{i}\",\"age\":\"{20 + i % 50}\"}},");
+                inputJson.Append($"{{\"name\":\"User{i}\",\"email\":\"User{i}@example.com\",\"age\":\"{20 + i % 50}\"}},");
             }
+
             inputJson.Remove(inputJson.Length - 1, 1).Append("]");
             using var inputDataStream = new MemoryStream(Encoding.UTF8.GetBytes(inputJson.ToString()));
 
@@ -145,7 +146,7 @@ namespace JsonSchemaValidation.Test
             var chunks = await _inputProcessor.ChunkInputAsync(inputDataStream, 100, CancellationToken.None);
 
             // Assert
-            Assert.AreEqual(10, chunks.Count());
+            Assert.AreEqual(100, chunks.Count());
             Assert.AreEqual(100, chunks.First().Count);
         }
     }
