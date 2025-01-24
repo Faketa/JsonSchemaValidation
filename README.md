@@ -1,14 +1,14 @@
 # JsonSchemaValidation Library
 
 ## Overview
-The `JsonSchemaValidation` library provides a modular, scalable, and efficient framework for validating JSON data against customizable schema rules. It is designed for performance, maintainability, and extensibility, leveraging modern C# practices, including asynchronous programming, dependency injection, and separation of concerns.
+The JsonSchemaValidation library is a tool for validating JSON data with customizable schemas. It's built for performance and scalability, using modern C# practices like async programming and data streaming.
 
 ## Features
 - **Schema-based Validation:** Define validation rules for fields, including length constraints, mandatory fields, and more.
 - **Chunked Processing:** Processes large datasets efficiently by splitting input into smaller chunks.
 - **Customizable Rules:** Easily extendable with custom validation rules via interfaces.
 - **Streaming Support:** Utilizes streaming techniques to avoid loading entire datasets into memory.
-- **Detailed Logging:** Provides granular logging for tracking validation progress and debugging issues.
+- **Detailed Logging:** Provides logging for tracking validation progress and debugging issues.
 - **Cancellation Support:** Includes support for cancellation tokens to handle long-running operations gracefully.
 - **Functional Programming Principles:** Implements immutability and higher-order functions where applicable.
 
@@ -27,53 +27,61 @@ git clone https://github.com/Faketa/JsonSchemaValidation.git
 - **Dependencies**:
   - `Newtonsoft.Json`: For JSON serialization and deserialization.
   - `Microsoft.Extensions.Logging`: For structured logging.
+  - `Microsoft.Extensions.Logging.Console`: For adding the Console.
 
 ### Example Usage
 
 #### Basic Setup
 ```csharp
-using System;
-using System.IO;
-using System.Threading;
-using Microsoft.Extensions.Logging;
 using JsonSchemaValidation;
+using JsonSchemaValidation.ValidationRules;
+using Microsoft.Extensions.Logging;
 
-class Program
+var configuration = new ValidationConfiguration
 {
-    static async Task Main(string[] args)
-    {
-        var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
-        var logger = loggerFactory.CreateLogger("JsonValidatorLogger");
+ ChunkSize = 100,
+ ValidationRules = new IValidationRule[]
+ {
+  new LengthValidationRule(),
+  new MandatoryValidationRule()
+ }
+};
 
-        var configuration = new ValidationConfiguration
-        {
-            ChunkSize = 100,
-            ConstraintValidator = new IValidationRule[]
-            {
-                new LengthValidationRule(),
-                new MandatoryValidationRule()
-            }
-        };
+using var loggerFactory = LoggerFactory.Create(builder =>
+{
+ builder.AddConsole();
+});
 
-        var validator = new JsonValidator(configuration, logger);
+var logger = loggerFactory.CreateLogger("JsonSchemaValidationLogger");
 
-        await using var schemaStream = File.OpenRead("schema.json");
-        await using var inputStream = File.OpenRead("input.json");
+var validator = new JsonValidator(configuration, logger);
 
-        var outputPath = "output.json";
+string testFilesPath = Path.GetFullPath(@"..\..\..\..\JsonSchemaValidation.Test\Testfiles\");
 
-        await validator.ValidateAndProcessAsync(schemaStream, inputStream, outputPath, CancellationToken.None);
-        Console.WriteLine("Validation completed.");
-    }
+//Sample check for JSON one object
+try
+{
+    var cancellationTokenSource = new CancellationTokenSource();
+    var cancellationToken = cancellationTokenSource.Token;
+
+    logger.LogInformation("Validation and processing of JSON one object started.");
+
+    await validator.ValidateAndProcessAsync($"{testFilesPath}schema.json", $"{testFilesPath}input.json", $"{testFilesPath}output.json", cancellationToken);
+
+    logger.LogInformation("Validation and processing completed.");
+}
+catch (Exception ex)
+{
+    logger.LogError($"An error occurred in the application: {ex.Message}");
 }
 ```
 
 #### Schema Example
 ```json
 {
-  "name": { "Length": 50, "Mandatory": true },
-  "email": { "Length": 100, "Mandatory": true },
-  "age": { "Length": 3, "Mandatory": false }
+  "name": { "length": 50, "mandatory": true },
+  "email": { "length": 100, "mandatory": true },
+  "age": { "length": 3, "mandatory": false }
 }
 ```
 
@@ -81,18 +89,49 @@ class Program
 ```json
 [
   { "name": "John Doe", "email": "john.doe@example.com", "age": "30" },
-  { "name": "Jane Smith", "email": "jane.smith@example.com" }
+  { "name": "Jane Smith", "email": "jane.smith@example.com", "age": "24" }
 ]
 ```
 
-### Unit Testing
-Unit tests for all major components are included using NUnit 3. To run the tests:
+## Unit Testing
+The `JsonSchemaValidation` library includes comprehensive unit tests to ensure reliability and correctness. Unit tests are implemented using the NUnit 3 framework and cover various edge cases for core components.
 
-1. Navigate to the `Tests` directory.
-2. Execute the tests using the .NET CLI:
-   ```bash
-   dotnet test
-   ```
+### Testing Framework
+- **NUnit 3** is used for unit testing.
+- **Moq** is utilized for mocking dependencies such as `ILogger`.
+
+### Key Tests
+#### JsonValidator
+- **Validates and processes input:** Ensures that JSON input is validated against the schema and results are written to an output file.
+- **Handles invalid schema:** Verifies that errors are logged when the schema is malformed.
+- **Handles empty input:** Ensures that a log error is generated for empty JSON input.
+- **Respects cancellation tokens:** Validates that operations can be canceled midway.
+
+#### SchemaReader
+- **Reads and deserializes schema:** Ensures that valid schemas are correctly parsed into objects.
+- **Throws on malformed or empty schema:** Tests behavior for invalid JSON or empty schema files.
+- **Handles cancellation tokens:** Validates cancellation behavior during schema reading.
+
+#### InputProcessor
+- **Processes input in chunks:** Ensures large datasets are split into manageable chunks.
+- **Handles single and array JSON inputs:** Validates both single object and array structures.
+- **Logs malformed records:** Ensures that invalid records are skipped with appropriate warnings.
+- **Respects cancellation tokens:** Ensures that processing stops upon cancellation.
+
+#### ResultWriter
+- **Writes results to a file:** Validates that results are serialized and written correctly.
+- **Handles cancellation tokens:** Ensures partial writes are canceled and incomplete files are cleaned up.
+- **Throws on null output paths:** Ensures proper exceptions are thrown for invalid input.
+
+### Running Tests
+Run tests using the .NET CLI:
+```bash
+cd Tests
+
+dotnet test
+```
+
+The test results will display in the console, indicating the success or failure of each test case.
 
 ## Architecture
 
@@ -160,9 +199,6 @@ Contributions are welcome! Please follow these steps:
 1. Fork the repository.
 2. Create a feature branch.
 3. Submit a pull request with clear documentation of changes.
-
-## License
-This project is licensed under the MIT License. See the LICENSE file for details.
 
 ## Contact
 For questions or feedback, please contact [info@cezarytomczak.pl].

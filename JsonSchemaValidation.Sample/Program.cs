@@ -57,24 +57,6 @@ catch (Exception ex)
     logger.LogError($"An error occurred in the application: {ex.Message}");
 }
 
-
-//Sample check for JSON large collection
-try
-{
-    var cancellationTokenSource = new CancellationTokenSource();
-    var cancellationToken = cancellationTokenSource.Token;
-
-    logger.LogInformation("Validation and processing of JSON large collection started.");
-
-    await validator.ValidateAndProcessAsync($"{testFilesPath}schema.json", $"{testFilesPath}input-large.json", $"{testFilesPath}output-large.json", cancellationToken);
-
-    logger.LogInformation("Validation and processing completed.");
-}
-catch (Exception ex)
-{
-    logger.LogError($"An error occurred in the application: {ex.Message}");
-}
-
 //Sample check for JSON one object with custom error message in schema
 try
 {
@@ -92,5 +74,23 @@ catch (Exception ex)
     logger.LogError($"An error occurred in the application: {ex.Message}");
 }
 
+//Sample check for JSON large collection
+/*
+try
+{
+    var cancellationTokenSource = new CancellationTokenSource();
+    var cancellationToken = cancellationTokenSource.Token;
+
+    logger.LogInformation("Validation and processing of JSON large collection started.");
+
+    await validator.ValidateAndProcessAsync($"{testFilesPath}schema.json", $"{testFilesPath}input-large.json", $"{testFilesPath}output-large.json", cancellationToken);
+
+    logger.LogInformation("Validation and processing completed.");
+}
+catch (Exception ex)
+{
+    logger.LogError($"An error occurred in the application: {ex.Message}");
+}
+*/
 
 
