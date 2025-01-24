@@ -32,6 +32,8 @@ git clone https://github.com/Faketa/JsonSchemaValidation.git
 ### Example Usage
 
 #### Basic Setup
+The output files will be saved in the "\JsonSchemaValidation.Test\Testfiles\" directory.
+
 ```csharp
 using JsonSchemaValidation;
 using JsonSchemaValidation.ValidationRules;
