@@ -123,16 +123,6 @@ The `JsonSchemaValidation` library includes comprehensive unit tests to ensure r
 - **Handles cancellation tokens:** Ensures partial writes are canceled and incomplete files are cleaned up.
 - **Throws on null output paths:** Ensures proper exceptions are thrown for invalid input.
 
-### Running Tests
-Run tests using the .NET CLI:
-```bash
-cd Tests
-
-dotnet test
-```
-
-The test results will display in the console, indicating the success or failure of each test case.
-
 ## Architecture
 
 ### Core Components
@@ -164,20 +154,20 @@ The library supports creating custom rules by implementing the `IValidationRule`
 
 ### Folder Structure
 ```plaintext
-src/
 ├── JsonValidator.cs
-├── SchemaReader.cs
-├── InputProcessor.cs
-├── ResultWriter.cs
+├── ValidationConfiguration.cs
+├── Services/
+│   ├── ConstraintValidator.cs
+│   ├── SchemaReader.cs
+│   ├── InputProcessor.cs
+│   ├── ResultWriter.cs
 ├── ValidationRules/
 │   ├── IValidationRule.cs
 │   ├── LengthValidationRule.cs
 │   ├── MandatoryValidationRule.cs
 ├── Models/
 │   ├── SchemaField.cs
-│   ├── ValidationResult.cs
-└── Configuration/
-    └── ValidationConfiguration.cs
+└── ├── ValidationResult.cs
 ```
 
 ## Customization
