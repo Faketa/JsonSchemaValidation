@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,6 +28,16 @@ namespace JsonSchemaValidation.Test
         }
 
         [Test]
+        public void ChunkInputAsync_NullStream_ThrowsArgumentNullException()
+        {
+            var cancellationToken = CancellationToken.None;
+            Assert.ThrowsAsync<ArgumentNullException>(async () =>
+            {
+                await foreach (var _ in _inputProcessor.ChunkInputAsync(null, 2, cancellationToken)) { }
+            });
+        }
+        
+        [Test]
         public async Task ChunkInputAsync_ValidArrayInput_ShouldReturnChunks()
         {
             // Arrange
@@ -38,7 +49,7 @@ namespace JsonSchemaValidation.Test
             using var inputDataStream = new MemoryStream(Encoding.UTF8.GetBytes(inputJson));
 
             // Act
-            var chunks = await _inputProcessor.ChunkInputAsync(inputDataStream, 2, CancellationToken.None);
+            var chunks = await _inputProcessor.ChunkInputAsync(inputDataStream, 2, CancellationToken.None).ToListAsync();
 
             // Assert
             Assert.AreEqual(2, chunks.Count());
@@ -46,6 +57,7 @@ namespace JsonSchemaValidation.Test
             Assert.AreEqual(1, chunks.Last().Count);
         }
 
+        
         [Test]
         public async Task ChunkInputAsync_SingleObjectInput_ShouldReturnSingleChunk()
         {
@@ -54,7 +66,7 @@ namespace JsonSchemaValidation.Test
             using var inputDataStream = new MemoryStream(Encoding.UTF8.GetBytes(inputJson));
 
             // Act
-            var chunks = await _inputProcessor.ChunkInputAsync(inputDataStream, 2, CancellationToken.None);
+            var chunks = await _inputProcessor.ChunkInputAsync(inputDataStream, 2, CancellationToken.None).ToListAsync();
 
             // Assert
             Assert.AreEqual(1, chunks.Count());
@@ -69,7 +81,7 @@ namespace JsonSchemaValidation.Test
             using var inputDataStream = new MemoryStream(Encoding.UTF8.GetBytes(inputJson));
 
             // Act
-            var chunks = await _inputProcessor.ChunkInputAsync(inputDataStream, 2, CancellationToken.None);
+            var chunks = await _inputProcessor.ChunkInputAsync(inputDataStream, 2, CancellationToken.None).ToListAsync();
 
             // Assert
             Assert.IsEmpty(chunks);
@@ -83,7 +95,7 @@ namespace JsonSchemaValidation.Test
             using var inputDataStream = new MemoryStream(Encoding.UTF8.GetBytes(inputJson));
 
             // Act
-            var chunks = await _inputProcessor.ChunkInputAsync(inputDataStream, 2, CancellationToken.None);
+            var chunks = await _inputProcessor.ChunkInputAsync(inputDataStream, 2, CancellationToken.None).ToListAsync();
 
             // Assert
             Assert.IsEmpty(chunks);
@@ -102,7 +114,7 @@ namespace JsonSchemaValidation.Test
         {
             // Act & Assert
             Assert.ThrowsAsync<ArgumentNullException>(async () =>
-                await _inputProcessor.ChunkInputAsync(null, 2, CancellationToken.None));
+                await _inputProcessor.ChunkInputAsync(null, 2, CancellationToken.None).ToListAsync());
         }
 
         [Test]
@@ -120,7 +132,7 @@ namespace JsonSchemaValidation.Test
             // Act
             try
             {
-                await _inputProcessor.ChunkInputAsync(inputDataStream, 2, cts.Token);
+                await _inputProcessor.ChunkInputAsync(inputDataStream, 2, cts.Token).ToListAsync();
                 Assert.Fail("Expected TaskCanceledException was not thrown.");
             }
             catch (OperationCanceledException)
@@ -143,11 +155,27 @@ namespace JsonSchemaValidation.Test
             using var inputDataStream = new MemoryStream(Encoding.UTF8.GetBytes(inputJson.ToString()));
 
             // Act
-            var chunks = await _inputProcessor.ChunkInputAsync(inputDataStream, 100, CancellationToken.None);
+            var chunks = await _inputProcessor.ChunkInputAsync(inputDataStream, 100, CancellationToken.None).ToListAsync();
 
             // Assert
             Assert.AreEqual(100, chunks.Count());
             Assert.AreEqual(100, chunks.First().Count);
+        }
+    }
+
+    /// <summary>
+    /// Helper extension method to convert IAsyncEnumerable to List.
+    /// </summary>
+    public static class AsyncEnumerableExtensions
+    {
+        public static async Task<List<T>> ToListAsync<T>(this IAsyncEnumerable<T> source, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            var list = new List<T>();
+            await foreach (var item in source.WithCancellation(cancellationToken))
+            {
+                list.Add(item);
+            }
+            return list;
         }
     }
 }

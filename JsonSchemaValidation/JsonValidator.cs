@@ -72,25 +72,28 @@ public class JsonValidator
         schemaStream = schemaStream ?? throw new ArgumentNullException(nameof(schemaStream));
         inputStream = inputStream ?? throw new ArgumentNullException(nameof(inputStream));
 
-        var schema = await _schemaReader.ReadSchemaAsync(schemaStream, cancellationToken);
-        if (schema == null)
+        var schema = _schemaReader.ReadSchemaAsync(schemaStream, cancellationToken);
+
+        await schema;
+        if (schema.Result == null)
         {
             _logger.LogError("Failed to load schema.");
             return;
         }
 
-        var chunks = await _inputProcessor.ChunkInputAsync(inputStream, _configuration.ChunkSize, cancellationToken);
-        if (chunks == null || !chunks.Any())
+        var results = new ConcurrentBag<ValidationResult>();
+        var anyChunk = false;
+
+        await foreach (var chunk in _inputProcessor.ChunkInputAsync(inputStream, _configuration.ChunkSize, cancellationToken))
+        {
+            anyChunk = true;
+            ValidateChunk(chunk, schema.Result, results);
+        }
+
+        if (!anyChunk)
         {
             _logger.LogError("Input JSON is empty.");
             return;
-        }
-
-        var results = new ConcurrentBag<ValidationResult>();
-
-        foreach (var chunk in chunks)
-        {
-            ValidateChunk(chunk, schema, results);
         }
 
         await _resultWriter.WriteResultsAsync(outputPath, results, cancellationToken);
