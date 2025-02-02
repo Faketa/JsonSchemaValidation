@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using System.Runtime.CompilerServices;
 
 namespace JsonSchemaValidation.Services;
 
