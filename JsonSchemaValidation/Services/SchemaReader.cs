@@ -28,10 +28,7 @@ namespace JsonSchemaValidation.Services
         /// <exception cref="JsonException">Thrown when the Schema is malformed JSON</exception>
         public async Task<Dictionary<string, SchemaField>?> ReadSchemaAsync(Stream schemaStream, CancellationToken cancellationToken)
         {
-            if (schemaStream == null)
-            {
-                throw new ArgumentNullException(nameof(schemaStream), "Schema stream cannot be null.");
-            }
+            ArgumentNullException.ThrowIfNull(schemaStream);
 
             try
             {

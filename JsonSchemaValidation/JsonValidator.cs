@@ -25,8 +25,8 @@ public class JsonValidator
     /// <param name="logger">Microsoft Logger</param>
     public JsonValidator(ValidationConfiguration configuration, ILogger logger)
     {
-        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration), "Validation configuration cannot be null.");
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger), "Logger cannot be null.");
+        ArgumentNullException.ThrowIfNull(configuration);
+        ArgumentNullException.ThrowIfNull(logger);
 
         _configuration = configuration;
         _validationRules = new ConstraintValidator(configuration.ValidationRules);
@@ -69,8 +69,8 @@ public class JsonValidator
     /// <exception cref="T:System.IO.FileNotFoundException">The specified file cannot be found.</exception>
     public async Task ValidateAndProcessAsync(Stream schemaStream, Stream inputStream, string outputPath, CancellationToken cancellationToken)
     {
-        schemaStream = schemaStream ?? throw new ArgumentNullException(nameof(schemaStream));
-        inputStream = inputStream ?? throw new ArgumentNullException(nameof(inputStream));
+        ArgumentNullException.ThrowIfNull(schemaStream);
+        ArgumentNullException.ThrowIfNull(inputStream);
 
         var schema = await _schemaReader.ReadSchemaAsync(schemaStream, cancellationToken);
 

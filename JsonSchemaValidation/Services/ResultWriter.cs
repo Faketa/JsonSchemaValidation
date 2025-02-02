@@ -28,10 +28,7 @@ public class ResultWriter
     /// <exception cref="OperationCanceledException">Thrown when the operation is canceled.</exception>
     public async Task WriteResultsAsync(string outputPath, IEnumerable<ValidationResult> results, CancellationToken cancellationToken)
     {
-        if (outputPath == null)
-        {
-            throw new ArgumentNullException(nameof(outputPath), "Output path cannot be null.");
-        }
+        ArgumentNullException.ThrowIfNull(outputPath);
 
         try
         {

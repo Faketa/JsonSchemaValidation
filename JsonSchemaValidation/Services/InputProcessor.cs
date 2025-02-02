@@ -35,8 +35,7 @@ public class InputProcessor
     public async IAsyncEnumerable<List<Dictionary<string, string>>> ChunkInputAsync(
         Stream inputDataStream, int chunkSize, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        if (inputDataStream == null)
-            throw new ArgumentNullException(nameof(inputDataStream), "Input data stream cannot be null.");
+        ArgumentNullException.ThrowIfNull(inputDataStream);
 
         cancellationToken.ThrowIfCancellationRequested();
 
