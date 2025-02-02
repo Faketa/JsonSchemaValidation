@@ -32,10 +32,12 @@ public class InputProcessor
     /// <exception cref="OperationCanceledException">Thrown when the operation is canceled.</exception>
     /// <exception cref="ArgumentNullException">Thrown when the inputDataStream is null.</exception>
     public async IAsyncEnumerable<List<Dictionary<string, string>>> ChunkInputAsync(
-        Stream inputDataStream, int chunkSize, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
+        Stream inputDataStream, int chunkSize, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         if (inputDataStream == null)
             throw new ArgumentNullException(nameof(inputDataStream), "Input data stream cannot be null.");
+
+        cancellationToken.ThrowIfCancellationRequested();
 
         using var inputReader = new StreamReader(inputDataStream);
         using var jsonReader = new JsonTextReader(inputReader);
