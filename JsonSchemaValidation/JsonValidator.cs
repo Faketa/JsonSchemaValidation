@@ -72,10 +72,9 @@ public class JsonValidator
         schemaStream = schemaStream ?? throw new ArgumentNullException(nameof(schemaStream));
         inputStream = inputStream ?? throw new ArgumentNullException(nameof(inputStream));
 
-        var schema = _schemaReader.ReadSchemaAsync(schemaStream, cancellationToken);
+        var schema = await _schemaReader.ReadSchemaAsync(schemaStream, cancellationToken);
 
-        await schema;
-        if (schema.Result == null)
+        if (schema == null)
         {
             _logger.LogError("Failed to load schema.");
             return;
@@ -87,7 +86,7 @@ public class JsonValidator
         await foreach (var chunk in _inputProcessor.ChunkInputAsync(inputStream, _configuration.ChunkSize, cancellationToken))
         {
             anyChunk = true;
-            ValidateChunk(chunk, schema.Result, results);
+            ValidateChunk(chunk, schema, results);
         }
 
         if (!anyChunk)
