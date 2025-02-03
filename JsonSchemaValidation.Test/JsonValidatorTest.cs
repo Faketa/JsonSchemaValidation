@@ -38,7 +38,7 @@ namespace JsonSchemaValidation.Test
         }
 
         [Test]
-        public async Task ValidateAndProcessAsync_ValidInput_ShouldWriteResults()
+        public async Task ValidateAsync_ValidInput_ShouldWriteResults()
         {
             // Arrange
             var schemaJson = "{" +
@@ -53,7 +53,7 @@ namespace JsonSchemaValidation.Test
             var outputPath = "output.json";
 
             // Act
-            await _validator.ValidateAndProcessAsync(schemaStream, inputDataStream, outputPath, CancellationToken.None);
+            await _validator.ValidateAsync(schemaStream, inputDataStream, outputPath, CancellationToken.None);
 
             // Assert
             Assert.IsTrue(File.Exists(outputPath));

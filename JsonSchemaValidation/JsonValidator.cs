@@ -16,6 +16,7 @@ public class JsonValidator
     private readonly SchemaReader _schemaReader;
     private readonly InputProcessor _inputProcessor;
     private readonly ResultWriter _resultWriter;
+    private readonly ChunkValidator _chunkValidator;
     private readonly ILogger _logger;
 
     /// <summary>
@@ -33,6 +34,7 @@ public class JsonValidator
         _schemaReader = new SchemaReader(logger);
         _inputProcessor = new InputProcessor(logger);
         _resultWriter = new ResultWriter(logger);
+        _chunkValidator = new ChunkValidator(_validationRules, logger);
         _logger = logger;
     }
 
@@ -46,7 +48,7 @@ public class JsonValidator
     /// <returns>A task representing the asynchronous validation and writing process.</returns>
     /// <exception cref="T:System.IO.DirectoryNotFoundException">Part of the filename or directory cannot be found.</exception>
     /// <exception cref="T:System.IO.FileNotFoundException">The specified file cannot be found.</exception>
-    public async Task ValidateAndProcessAsync(string schemaPath, string inputDataPath, string outputPath, CancellationToken cancellationToken)
+    public async Task ValidateAsync(string schemaPath, string inputDataPath, string outputPath, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(schemaPath);
         ArgumentNullException.ThrowIfNull(inputDataPath);
@@ -54,7 +56,7 @@ public class JsonValidator
         await using var schemaStream = File.OpenRead(schemaPath);
         await using var inputStream = File.OpenRead(inputDataPath);
 
-        await ValidateAndProcessAsync(schemaStream, inputStream, outputPath, cancellationToken);
+        await ValidateAsync(schemaStream, inputStream, outputPath, cancellationToken);
     }
 
     /// <summary>
@@ -67,7 +69,7 @@ public class JsonValidator
     /// <returns>A task representing the asynchronous validation and writing process.</returns>
     /// <exception cref="T:System.IO.DirectoryNotFoundException">Part of the filename or directory cannot be found.</exception>
     /// <exception cref="T:System.IO.FileNotFoundException">The specified file cannot be found.</exception>
-    public async Task ValidateAndProcessAsync(Stream schemaStream, Stream inputStream, string outputPath, CancellationToken cancellationToken)
+    public async Task ValidateAsync(Stream schemaStream, Stream inputStream, string outputPath, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(schemaStream);
         ArgumentNullException.ThrowIfNull(inputStream);
@@ -80,50 +82,20 @@ public class JsonValidator
             return;
         }
 
-        var results = new ConcurrentBag<ValidationResult>();
-        var anyChunk = false;
+        var results = new List<ValidationResult>();
 
         await foreach (var chunk in _inputProcessor.ChunkInputAsync(inputStream, _configuration.ChunkSize, cancellationToken))
         {
-            anyChunk = true;
-            ValidateChunk(chunk, schema, results);
+            var validatedChunk = _chunkValidator.ValidateChunk(chunk, schema);
+            results.AddRange(validatedChunk);
         }
 
-        if (!anyChunk)
+        if (!results.Any())
         {
             _logger.LogError("Input JSON is empty.");
             return;
         }
 
         await _resultWriter.WriteResultsAsync(outputPath, results, cancellationToken);
-    }
-
-    /// <summary>
-    /// Parallel validation a single chunk of input records.
-    /// </summary>
-    /// <param name="chunk">The chunk of input records to validate.</param>
-    /// <param name="schema">The schema to validate against.</param>
-    /// <param name="results">The concurrent bag to collect validation results.</param>
-    private void ValidateChunk(List<Dictionary<string, string>> chunk, Dictionary<string, SchemaField> schema,  ConcurrentBag<ValidationResult> results)
-    {
-        Parallel.ForEach(chunk, record =>
-        {
-            foreach (var field in schema)
-            {
-                var (fieldName, schemaField) = field;
-                record.TryGetValue(fieldName, out var fieldValue);
-
-                var result = _validationRules.Validate(fieldName, fieldValue, schemaField);
-                if (!result.IsValid)
-                {
-                    _logger.LogWarning(
-                        $"Validation failed for field '{result.Field}': {result.ErrorMessage}. Record: {JsonConvert.SerializeObject(record)}");
-                }
-
-                _logger.LogInformation(
-                    $"Validation success for field '{result.Field}'. Record: {JsonConvert.SerializeObject(record)}");
-                results.Add(result);
-            }
-        });
     }
 }
