@@ -48,8 +48,8 @@ public class JsonValidator
     /// <exception cref="T:System.IO.FileNotFoundException">The specified file cannot be found.</exception>
     public async Task ValidateAndProcessAsync(string schemaPath, string inputDataPath, string outputPath, CancellationToken cancellationToken)
     {
-        schemaPath = schemaPath ?? throw new ArgumentNullException(nameof(schemaPath));
-        inputDataPath = inputDataPath ?? throw new ArgumentNullException(nameof(inputDataPath));
+        ArgumentNullException.ThrowIfNull(schemaPath);
+        ArgumentNullException.ThrowIfNull(inputDataPath);
 
         await using var schemaStream = File.OpenRead(schemaPath);
         await using var inputStream = File.OpenRead(inputDataPath);
