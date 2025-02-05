@@ -46,6 +46,20 @@ namespace JsonSchemaValidation.Test
         }
 
         [Test]
+        public async Task ReadSchemaAsync_InvalidSchema_ShouldThrowException()
+        {
+            // Arrange
+            var schemaJson = $"{_testFilesPath}schema-invalid.json";
+            await using var schemaStream = File.OpenRead(schemaJson);
+
+            // Act & Assert
+            var ex = Assert.ThrowsAsync<InvalidOperationException>(async () =>
+                await _schemaReader.ReadSchemaAsync(schemaStream, CancellationToken.None));
+
+            Assert.AreEqual("Schema is malformed JSON.", ex.Message);
+        }
+
+        [Test]
         public async Task ReadSchemaAsync_EmptySchema_ShouldThrowException()
         {
             // Arrange

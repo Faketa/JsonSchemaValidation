@@ -76,24 +76,12 @@ public class JsonValidator
 
         var schema = await _schemaReader.ReadSchemaAsync(schemaStream, cancellationToken);
 
-        if (schema == null)
-        {
-            _logger.LogError("Failed to load schema.");
-            return;
-        }
-
         var results = new List<ValidationResult>();
 
         await foreach (var chunk in _inputProcessor.ChunkInputAsync(inputStream, _configuration.ChunkSize, cancellationToken))
         {
             var validatedChunk = _chunkValidator.ValidateChunk(chunk, schema);
             results.AddRange(validatedChunk);
-        }
-
-        if (!results.Any())
-        {
-            _logger.LogError("Input JSON is empty.");
-            return;
         }
 
         await _resultWriter.WriteResultsAsync(outputPath, results, cancellationToken);

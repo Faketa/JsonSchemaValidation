@@ -101,6 +101,10 @@ public class InputProcessor
             if (record.Count > 0)
             {
                 yield return new List<Dictionary<string, string>> { record };
+            } 
+            else
+            {
+                _logger.LogError("Input JSON is empty.");
             }
         }
         else

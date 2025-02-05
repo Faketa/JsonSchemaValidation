@@ -109,6 +109,28 @@ namespace JsonSchemaValidation.Test
         }
 
         [Test]
+        public async Task ChunkInputAsync_EmptyJson_ShouldLogError()
+        {
+            // Arrange
+            var inputJson = $"{_testFilesPath}input-empty.json";
+            await using var inputDataStream = File.OpenRead(inputJson);
+
+            // Act
+            var chunks = await _inputProcessor.ChunkInputAsync(inputDataStream, 2, CancellationToken.None).ToListAsync();
+
+            // Assert
+            Assert.IsEmpty(chunks);
+            _loggerMock.Verify(
+                logger => logger.Log(
+                    LogLevel.Error,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Input JSON is empty.")),
+                    It.IsAny<Exception>(),
+                    It.IsAny<Func<It.IsAnyType, Exception, string>>()
+                ), Times.AtLeastOnce);
+        }
+
+        [Test]
         public void ChunkInputAsync_NullStream_ShouldThrowException()
         {
             // Act & Assert
