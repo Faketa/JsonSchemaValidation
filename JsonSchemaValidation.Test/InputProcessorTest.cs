@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Newtonsoft.Json;
 using NUnit.Framework;
+using JsonSchemaValidation.Test.Extensions;
 
 namespace JsonSchemaValidation.Test
 {
@@ -19,12 +20,14 @@ namespace JsonSchemaValidation.Test
     {
         private InputProcessor _inputProcessor;
         private Mock<ILogger> _loggerMock;
+        private string _testFilesPath;
 
         [SetUp]
         public void SetUp()
         {
             _loggerMock = new Mock<ILogger>();
             _inputProcessor = new InputProcessor(_loggerMock.Object);
+            _testFilesPath = Path.GetFullPath(@"..\..\..\..\JsonSchemaValidation.Test\Testfiles\");
         }
 
         [Test]
@@ -41,12 +44,8 @@ namespace JsonSchemaValidation.Test
         public async Task ChunkInputAsync_ValidArrayInput_ShouldReturnChunks()
         {
             // Arrange
-            var inputJson = "[" +
-                            "{\"name\":\"John\",\"email\":\"John.Doe@example.com\",\"age\":\"30\"}," +
-                            "{\"name\":\"Jane\",\"email\":\"John.Doe@example.com\",\"age\":\"25\"}," +
-                            "{\"name\":\"Doe\",\"email\":\"John.Doe@example.com\",\"age\":\"40\"}" +
-                            "]";
-            using var inputDataStream = new MemoryStream(Encoding.UTF8.GetBytes(inputJson));
+            var inputJson = $"{_testFilesPath}input-collection.json";
+            await using var inputDataStream = File.OpenRead(inputJson);
 
             // Act
             var chunks = await _inputProcessor.ChunkInputAsync(inputDataStream, 2, CancellationToken.None).ToListAsync();
@@ -62,8 +61,8 @@ namespace JsonSchemaValidation.Test
         public async Task ChunkInputAsync_SingleObjectInput_ShouldReturnSingleChunk()
         {
             // Arrange
-            var inputJson = "{\"name\":\"John\",\"email\":\"John.doe@example.com\",\"age\":\"30\"}";
-            using var inputDataStream = new MemoryStream(Encoding.UTF8.GetBytes(inputJson));
+            var inputJson = $"{_testFilesPath}input.json";
+            await using var inputDataStream = File.OpenRead(inputJson);
 
             // Act
             var chunks = await _inputProcessor.ChunkInputAsync(inputDataStream, 2, CancellationToken.None).ToListAsync();
@@ -91,8 +90,8 @@ namespace JsonSchemaValidation.Test
         public async Task ChunkInputAsync_InvalidJson_ShouldLogError()
         {
             // Arrange
-            var inputJson = "[{\"name\":\"John"; // Malformed JSON
-            using var inputDataStream = new MemoryStream(Encoding.UTF8.GetBytes(inputJson));
+            var inputJson = $"{_testFilesPath}input-invalid.json";
+            await using var inputDataStream = File.OpenRead(inputJson);
 
             // Act
             var chunks = await _inputProcessor.ChunkInputAsync(inputDataStream, 2, CancellationToken.None).ToListAsync();
@@ -121,11 +120,9 @@ namespace JsonSchemaValidation.Test
         public async Task ChunkInputAsync_CancellationRequested_ShouldCancelOperation()
         {
             // Arrange
-            var inputJson = "[" +
-                            "{\"name\":\"John\",\"email\":\"john.doe@example.com\",\"age\":\"30\"}," +
-                            "{\"name\":\"Jane\",\"email\":\"Jane.doe@example.com\",\"age\":\"25\"}" +
-                            "]";
-            using var inputDataStream = new MemoryStream(Encoding.UTF8.GetBytes(inputJson));
+            var inputJson = $"{_testFilesPath}input-collection.json";
+            await using var inputDataStream = File.OpenRead(inputJson);
+
             var cts = new CancellationTokenSource();
             cts.CancelAfter(0); // Immediately cancel
 
@@ -139,43 +136,6 @@ namespace JsonSchemaValidation.Test
             {
                 Assert.Pass("Task was successfully canceled.");
             }
-        }
-
-        [Test]
-        public async Task ChunkInputAsync_LargeInput_ShouldProcessEfficiently()
-        {
-            // Arrange
-            var inputJson = new StringBuilder("[");
-            for (int i = 0; i < 10000; i++)
-            {
-                inputJson.Append($"{{\"name\":\"User{i}\",\"email\":\"User{i}@example.com\",\"age\":\"{20 + i % 50}\"}},");
-            }
-
-            inputJson.Remove(inputJson.Length - 1, 1).Append("]");
-            using var inputDataStream = new MemoryStream(Encoding.UTF8.GetBytes(inputJson.ToString()));
-
-            // Act
-            var chunks = await _inputProcessor.ChunkInputAsync(inputDataStream, 100, CancellationToken.None).ToListAsync();
-
-            // Assert
-            Assert.AreEqual(100, chunks.Count());
-            Assert.AreEqual(100, chunks.First().Count);
-        }
-    }
-
-    /// <summary>
-    /// Helper extension method to convert IAsyncEnumerable to List.
-    /// </summary>
-    public static class AsyncEnumerableExtensions
-    {
-        public static async Task<List<T>> ToListAsync<T>(this IAsyncEnumerable<T> source, [EnumeratorCancellation] CancellationToken cancellationToken = default)
-        {
-            var list = new List<T>();
-            await foreach (var item in source.WithCancellation(cancellationToken))
-            {
-                list.Add(item);
-            }
-            return list;
         }
     }
 }

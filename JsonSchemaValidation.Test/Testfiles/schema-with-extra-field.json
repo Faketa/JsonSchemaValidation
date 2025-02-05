@@ -1,0 +1,17 @@
+{
+    "name": {
+        "length": 50,
+        "mandatory": true,
+        "extraField": true
+    },
+    "age": {
+        "length": 3,
+        "mandatory": false,
+        "extraField": true
+    },
+    "email": {
+        "length": 100,
+        "mandatory": true,
+        "extraField": true
+    }
+}

@@ -18,12 +18,14 @@ namespace JsonSchemaValidation.Test
     {
         private ResultWriter _resultWriter;
         private Mock<ILogger> _loggerMock;
+        private string _testFilesPath;
 
         [SetUp]
         public void SetUp()
         {
             _loggerMock = new Mock<ILogger>();
             _resultWriter = new ResultWriter(_loggerMock.Object);
+            _testFilesPath = Path.GetFullPath(@"..\..\..\..\JsonSchemaValidation.Test\Testfiles\");
         }
 
         [Test]
@@ -35,7 +37,7 @@ namespace JsonSchemaValidation.Test
                 ValidationResult.Success("Field1"),
                 ValidationResult.Failure("Field2", "Error message")
             };
-            var outputPath = "test_output.json";
+            var outputPath = $"{_testFilesPath}output-test.json";
 
             // Act
             await _resultWriter.WriteResultsAsync(outputPath, results, CancellationToken.None);
@@ -45,9 +47,6 @@ namespace JsonSchemaValidation.Test
             var outputContent = await File.ReadAllTextAsync(outputPath);
             Assert.That(outputContent, Does.Contain("Field1"));
             Assert.That(outputContent, Does.Contain("Field2"));
-
-            // Cleanup
-            File.Delete(outputPath);
         }
 
         [Test]
@@ -69,7 +68,7 @@ namespace JsonSchemaValidation.Test
         {
             // Arrange
             var results = new List<ValidationResult>();
-            var outputPath = "test_empty_output.json";
+            var outputPath = $"{_testFilesPath}output-empty-results-test.json";
 
             // Act
             await _resultWriter.WriteResultsAsync(outputPath, results, CancellationToken.None);
@@ -78,9 +77,6 @@ namespace JsonSchemaValidation.Test
             Assert.IsTrue(File.Exists(outputPath));
             var outputContent = await File.ReadAllTextAsync(outputPath);
             Assert.That(outputContent, Is.EqualTo("[]"));
-
-            // Cleanup
-            File.Delete(outputPath);
         }
 
         [Test]
@@ -92,7 +88,8 @@ namespace JsonSchemaValidation.Test
                     ValidationResult.Success("Field1"),
                     ValidationResult.Failure("Field2", "Error message")
                 };
-            var outputPath = "test_cancel_output.json";
+            var outputPath = $"{_testFilesPath}output-cancel-test.json";
+
             var cts = new CancellationTokenSource();
             cts.Cancel(); // Immediately cancel.
 

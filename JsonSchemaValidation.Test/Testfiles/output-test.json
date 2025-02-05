@@ -1,0 +1,12 @@
+[
+  {
+    "Field": "Field1",
+    "IsValid": true,
+    "ErrorMessage": null
+  },
+  {
+    "Field": "Field2",
+    "IsValid": false,
+    "ErrorMessage": "Error message"
+  }
+]

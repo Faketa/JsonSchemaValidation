@@ -20,6 +20,7 @@ namespace JsonSchemaValidation.Test
         private JsonValidator _validator;
         private Mock<ILogger> _loggerMock;
         private ValidationConfiguration _configuration;
+        private string _testFilesPath;
 
         [SetUp]
         public void SetUp()
@@ -35,25 +36,19 @@ namespace JsonSchemaValidation.Test
                 }
             };
             _validator = new JsonValidator(_configuration, _loggerMock.Object);
+            _testFilesPath = Path.GetFullPath(@"..\..\..\..\JsonSchemaValidation.Test\Testfiles\");
         }
 
         [Test]
         public async Task ValidateAsync_ValidInput_ShouldWriteResults()
         {
             // Arrange
-            var schemaJson = "{" +
-                             "  \"name\": { \"Length\": 10, \"Mandatory\": true }," +
-                             "  \"email\": { \"Length\": 50, \"Mandatory\": true }," +
-                             "  \"age\": { \"Length\": 3, \"Mandatory\": false }" +
-                             "}";
-            var inputJson = "[{ \"name\": \"John\", \"email\": \"john@example.com\", \"age\": \"30\" }]";
-
-            using var schemaStream = new MemoryStream(Encoding.UTF8.GetBytes(schemaJson));
-            using var inputDataStream = new MemoryStream(Encoding.UTF8.GetBytes(inputJson));
-            var outputPath = "output.json";
+            var schemaJson = $"{_testFilesPath}schema.json";
+            var inputJson = $"{_testFilesPath}input.json";
+            var outputPath = $"{_testFilesPath}output.json";
 
             // Act
-            await _validator.ValidateAsync(schemaStream, inputDataStream, outputPath, CancellationToken.None);
+            await _validator.ValidateAsync(schemaJson, inputJson, outputPath, CancellationToken.None);
 
             // Assert
             Assert.IsTrue(File.Exists(outputPath));

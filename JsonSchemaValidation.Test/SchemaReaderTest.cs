@@ -17,24 +17,22 @@ namespace JsonSchemaValidation.Test
     {
         private SchemaReader _schemaReader;
         private Mock<ILogger> _loggerMock;
+        private string _testFilesPath;
 
         [SetUp]
         public void SetUp()
         {
             _loggerMock = new Mock<ILogger>();
             _schemaReader = new SchemaReader(_loggerMock.Object);
+            _testFilesPath = Path.GetFullPath(@"..\..\..\..\JsonSchemaValidation.Test\Testfiles\");
         }
 
         [Test]
         public async Task ReadSchemaAsync_ValidSchema_ShouldReturnDictionary()
         {
             // Arrange
-            var schemaJson = "{" +
-                             "  \"name\": { \"Length\": 10, \"Mandatory\": true }," +
-                             "  \"email\": { \"Length\": 50, \"Mandatory\": true }," +
-                             "  \"age\": { \"Length\": 3, \"Mandatory\": false }" +
-                             "}";
-            using var schemaStream = new MemoryStream(Encoding.UTF8.GetBytes(schemaJson));
+            var schemaJson = $"{_testFilesPath}schema.json";
+            await using var schemaStream = File.OpenRead(schemaJson);
 
             // Act
             var result = await _schemaReader.ReadSchemaAsync(schemaStream, CancellationToken.None);
@@ -51,8 +49,8 @@ namespace JsonSchemaValidation.Test
         public async Task ReadSchemaAsync_EmptySchema_ShouldThrowException()
         {
             // Arrange
-            var emptySchemaJson = "{}";
-            using var schemaStream = new MemoryStream(Encoding.UTF8.GetBytes(emptySchemaJson));
+            var schemaJson = $"{_testFilesPath}schema-empty.json";
+            await using var schemaStream = File.OpenRead(schemaJson);
 
             // Act & Assert
             var ex = Assert.ThrowsAsync<InvalidOperationException>(async () =>
@@ -65,28 +63,26 @@ namespace JsonSchemaValidation.Test
         public async Task ReadSchemaAsync_SchemaWithExtraFields_ShouldIgnoreExtras()
         {
             // Arrange
-            var schemaJson = "{" +
-                             "  \"name\": { \"Length\": 10, \"Mandatory\": true, \"ExtraField\": \"Ignored\" }" +
-                             "}";
-            using var schemaStream = new MemoryStream(Encoding.UTF8.GetBytes(schemaJson));
+            var schemaJson = $"{_testFilesPath}schema-with-extra-field.json";
+            await using var schemaStream = File.OpenRead(schemaJson);
 
             // Act
             var result = await _schemaReader.ReadSchemaAsync(schemaStream, CancellationToken.None);
 
             // Assert
             Assert.IsNotNull(result);
-            Assert.AreEqual(1, result.Count);
             Assert.IsTrue(result.ContainsKey("name"));
+            Assert.IsTrue(result.ContainsKey("age"));
+            Assert.IsTrue(result.ContainsKey("email"));
         }
 
         [Test]
         public async Task ReadSchemaAsync_CancellationRequested_ShouldCancelOperation()
         {
             // Arrange
-            var schemaJson = "{" +
-                             "  \"name\": { \"Length\": 10, \"Mandatory\": true }" +
-                             "}";
-            using var schemaStream = new MemoryStream(Encoding.UTF8.GetBytes(schemaJson));
+            var schemaJson = $"{_testFilesPath}schema.json";
+            await using var schemaStream = File.OpenRead(schemaJson);
+
             var cts = new CancellationTokenSource();
             cts.Cancel();
 
