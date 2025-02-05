@@ -16,15 +16,15 @@ namespace JsonSchemaValidation.Test
     public class SchemaReaderTest
     {
         private SchemaReader _schemaReader;
-        private Mock<ILogger> _loggerMock;
+        private Mock<ILogger<SchemaReader>> _mockLogger;
         private string _testFilesPath;
 
         [SetUp]
         public void SetUp()
         {
-            _loggerMock = new Mock<ILogger>();
-            _schemaReader = new SchemaReader(_loggerMock.Object);
             _testFilesPath = Path.GetFullPath(@"..\..\..\..\JsonSchemaValidation.Test\Testfiles\");
+            _mockLogger = new Mock<ILogger<SchemaReader>>();
+            _schemaReader = new SchemaReader(_mockLogger.Object);
         }
 
         [Test]

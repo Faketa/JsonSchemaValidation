@@ -9,9 +9,9 @@ namespace JsonSchemaValidation.Services
     /// </summary>
     public class SchemaReader
     {
-        private readonly ILogger _logger;
+        private readonly ILogger<SchemaReader> _logger;
 
-        public SchemaReader(ILogger logger)
+        public SchemaReader(ILogger<SchemaReader> logger)
         {
             _logger = logger;
         }

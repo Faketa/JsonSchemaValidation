@@ -12,9 +12,9 @@ namespace JsonSchemaValidation.Services;
 public class ChunkValidator
 {
     private readonly ConstraintValidator _validationRules;
-    private readonly ILogger _logger;
+    private readonly ILogger<ChunkValidator> _logger;
 
-    public ChunkValidator(ConstraintValidator validationRules, ILogger logger)
+    public ChunkValidator(ConstraintValidator validationRules, ILogger<ChunkValidator> logger)
     {
         _validationRules = validationRules;
         _logger = logger;

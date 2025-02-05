@@ -7,11 +7,11 @@ namespace JsonSchemaValidation.Services;
 /// </summary>
 public class ConstraintValidator
 {
-    private readonly List<IValidationRule> _rules;
+    private readonly IEnumerable<IValidationRule> _rules;
 
     public ConstraintValidator(IEnumerable<IValidationRule> rules)
     {
-        _rules = rules.ToList();
+        _rules = rules;
     }
 
     /// <summary>

@@ -9,9 +9,9 @@ namespace JsonSchemaValidation.Services;
 /// </summary>
 public class ResultWriter
 {
-    private readonly ILogger _logger;
+    private readonly ILogger<ResultWriter> _logger;
 
-    public ResultWriter(ILogger logger)
+    public ResultWriter(ILogger<ResultWriter> logger)
     {
         _logger = logger;
     }

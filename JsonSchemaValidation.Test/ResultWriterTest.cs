@@ -17,15 +17,15 @@ namespace JsonSchemaValidation.Test
     public class ResultWriterTest
     {
         private ResultWriter _resultWriter;
-        private Mock<ILogger> _loggerMock;
+        private Mock<ILogger<ResultWriter>> _mockLogger;
         private string _testFilesPath;
 
         [SetUp]
         public void SetUp()
         {
-            _loggerMock = new Mock<ILogger>();
-            _resultWriter = new ResultWriter(_loggerMock.Object);
             _testFilesPath = Path.GetFullPath(@"..\..\..\..\JsonSchemaValidation.Test\Testfiles\");
+            _mockLogger = new Mock<ILogger<ResultWriter>>();
+            _resultWriter = new ResultWriter(_mockLogger.Object);
         }
 
         [Test]
@@ -122,7 +122,7 @@ namespace JsonSchemaValidation.Test
             await _resultWriter.WriteResultsAsync(invalidPath, results, CancellationToken.None);
 
             // Assert
-            _loggerMock.Verify(
+            _mockLogger.Verify(
                 logger => logger.Log(
                     LogLevel.Error,
                     It.IsAny<EventId>(),

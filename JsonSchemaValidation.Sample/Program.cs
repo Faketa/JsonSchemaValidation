@@ -1,96 +1,77 @@
 ﻿using JsonSchemaValidation;
 using JsonSchemaValidation.ValidationRules;
+using JsonSchemaValidation.Extensions;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-var configuration = new ValidationConfiguration
-{
- ChunkSize = 100,
- ValidationRules = new IValidationRule[]
- {
-  new LengthValidationRule(),
-  new MandatoryValidationRule()
- }
-};
+var configuration = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .Build();
 
-using var loggerFactory = LoggerFactory.Create(builder =>
-{
- builder.AddConsole();
-});
+var services = new ServiceCollection();
+services.AddJsonSchemaValidation(configuration);
 
-var logger = loggerFactory.CreateLogger("JsonSchemaValidationLogger");
+//Validation rules
+services.AddSingleton<IValidationRule, MandatoryValidationRule>();
+services.AddSingleton<IValidationRule, LengthValidationRule>();
 
-var validator = new JsonValidator(configuration, logger);
+var serviceProvider = services.BuildServiceProvider();
+var validator = serviceProvider.GetRequiredService<JsonValidator>();
 
 string testFilesPath = Path.GetFullPath(@"..\..\..\..\JsonSchemaValidation.Test\Testfiles\");
 
-//Sample check for JSON one object
+//Validate JSON one object
 try
 {
     var cancellationTokenSource = new CancellationTokenSource();
     var cancellationToken = cancellationTokenSource.Token;
 
-    logger.LogInformation("Validation and processing of JSON one object started.");
-
-    await validator.ValidateAndProcessAsync($"{testFilesPath}schema.json", $"{testFilesPath}input.json", $"{testFilesPath}output.json", cancellationToken);
-
-    logger.LogInformation("Validation and processing completed.");
+    await validator.ValidateAsync($"{testFilesPath}schema.json", $"{testFilesPath}input.json", $"{testFilesPath}output.json", cancellationToken);
 }
 catch (Exception ex)
 {
-    logger.LogError($"An error occurred in the application: {ex.Message}");
+    Console.WriteLine($"An error occurred in the application: {ex.Message}");
 }
 
-//Sample check for JSON collection
+//Validate JSON collection
 try
 {
     var cancellationTokenSource = new CancellationTokenSource();
     var cancellationToken = cancellationTokenSource.Token;
 
-    logger.LogInformation("Validation and processing of JSON collection started.");
-
-    await validator.ValidateAndProcessAsync($"{testFilesPath}schema.json", $"{testFilesPath}input-collection.json", $"{testFilesPath}output-collection.json", cancellationToken);
-
-    logger.LogInformation("Validation and processing completed.");
+    await validator.ValidateAsync($"{testFilesPath}schema.json", $"{testFilesPath}input-collection.json", $"{testFilesPath}output-collection.json", cancellationToken);
 }
 catch (Exception ex)
 {
-    logger.LogError($"An error occurred in the application: {ex.Message}");
+    Console.WriteLine($"An error occurred in the application: {ex.Message}");
 }
 
-//Sample check for JSON one object with custom error message in schema
+//Validate JSON one object with custom error message in schema
 try
 {
     var cancellationTokenSource = new CancellationTokenSource();
     var cancellationToken = cancellationTokenSource.Token;
 
-    logger.LogInformation("Validation and processing of JSON one object with custom error message in schema started.");
-
-    await validator.ValidateAndProcessAsync($"{testFilesPath}schema-custom-error.json", $"{testFilesPath}input-collection.json", $"{testFilesPath}output-collection-custom-error.json", cancellationToken);
-
-    logger.LogInformation("Validation and processing completed.");
+    await validator.ValidateAsync($"{testFilesPath}schema-custom-error.json", $"{testFilesPath}input-collection.json", $"{testFilesPath}output-collection-custom-error.json", cancellationToken);
 }
 catch (Exception ex)
 {
-    logger.LogError($"An error occurred in the application: {ex.Message}");
+    Console.WriteLine($"An error occurred in the application: {ex.Message}");
 }
 
-//Sample check for JSON large collection
-/*
+//Validate JSON large collection
 try
 {
     var cancellationTokenSource = new CancellationTokenSource();
     var cancellationToken = cancellationTokenSource.Token;
 
-    logger.LogInformation("Validation and processing of JSON large collection started.");
-
-    await validator.ValidateAndProcessAsync($"{testFilesPath}schema.json", $"{testFilesPath}input-large.json", $"{testFilesPath}output-large.json", cancellationToken);
-
-    logger.LogInformation("Validation and processing completed.");
+    await validator.ValidateAsync($"{testFilesPath}schema.json", $"{testFilesPath}input-large.json", $"{testFilesPath}output-large.json", cancellationToken);
 }
 catch (Exception ex)
 {
-    logger.LogError($"An error occurred in the application: {ex.Message}");
+    Console.WriteLine($"An error occurred in the application: {ex.Message}");
 }
-*/
+
 
 

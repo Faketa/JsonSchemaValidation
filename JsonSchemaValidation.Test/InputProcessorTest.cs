@@ -12,22 +12,28 @@ using Moq;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using JsonSchemaValidation.Test.Extensions;
+using Microsoft.Extensions.Options;
 
 namespace JsonSchemaValidation.Test
 {
     [TestFixture]
     public class InputProcessorTests
     {
+        private Mock<ILogger<InputProcessor>> _mockLogger;
+        private Mock<IOptions<ValidationConfiguration>> _mockConfig;
         private InputProcessor _inputProcessor;
-        private Mock<ILogger> _loggerMock;
         private string _testFilesPath;
 
         [SetUp]
         public void SetUp()
         {
-            _loggerMock = new Mock<ILogger>();
-            _inputProcessor = new InputProcessor(_loggerMock.Object);
             _testFilesPath = Path.GetFullPath(@"..\..\..\..\JsonSchemaValidation.Test\Testfiles\");
+
+            _mockLogger = new Mock<ILogger<InputProcessor>>();
+            _mockConfig = new Mock<IOptions<ValidationConfiguration>>();
+            _mockConfig.Setup(c => c.Value).Returns(new ValidationConfiguration { ChunkSize = 2 });
+
+            _inputProcessor = new InputProcessor(_mockConfig.Object, _mockLogger.Object);
         }
 
         [Test]
@@ -36,7 +42,7 @@ namespace JsonSchemaValidation.Test
             var cancellationToken = CancellationToken.None;
             Assert.ThrowsAsync<ArgumentNullException>(async () =>
             {
-                await foreach (var _ in _inputProcessor.ChunkInputAsync(null, 2, cancellationToken)) { }
+                await foreach (var _ in _inputProcessor.ChunkInputAsync(null, cancellationToken)) { }
             });
         }
         
@@ -48,7 +54,7 @@ namespace JsonSchemaValidation.Test
             await using var inputDataStream = File.OpenRead(inputJson);
 
             // Act
-            var chunks = await _inputProcessor.ChunkInputAsync(inputDataStream, 2, CancellationToken.None).ToListAsync();
+            var chunks = await _inputProcessor.ChunkInputAsync(inputDataStream, CancellationToken.None).ToListAsync();
 
             // Assert
             Assert.AreEqual(2, chunks.Count());
@@ -65,7 +71,7 @@ namespace JsonSchemaValidation.Test
             await using var inputDataStream = File.OpenRead(inputJson);
 
             // Act
-            var chunks = await _inputProcessor.ChunkInputAsync(inputDataStream, 2, CancellationToken.None).ToListAsync();
+            var chunks = await _inputProcessor.ChunkInputAsync(inputDataStream, CancellationToken.None).ToListAsync();
 
             // Assert
             Assert.AreEqual(1, chunks.Count());
@@ -80,7 +86,7 @@ namespace JsonSchemaValidation.Test
             using var inputDataStream = new MemoryStream(Encoding.UTF8.GetBytes(inputJson));
 
             // Act
-            var chunks = await _inputProcessor.ChunkInputAsync(inputDataStream, 2, CancellationToken.None).ToListAsync();
+            var chunks = await _inputProcessor.ChunkInputAsync(inputDataStream, CancellationToken.None).ToListAsync();
 
             // Assert
             Assert.IsEmpty(chunks);
@@ -94,11 +100,11 @@ namespace JsonSchemaValidation.Test
             await using var inputDataStream = File.OpenRead(inputJson);
 
             // Act
-            var chunks = await _inputProcessor.ChunkInputAsync(inputDataStream, 2, CancellationToken.None).ToListAsync();
+            var chunks = await _inputProcessor.ChunkInputAsync(inputDataStream, CancellationToken.None).ToListAsync();
 
             // Assert
             Assert.IsEmpty(chunks);
-            _loggerMock.Verify(
+            _mockLogger.Verify(
                 logger => logger.Log(
                     LogLevel.Warning,
                     It.IsAny<EventId>(),
@@ -116,11 +122,11 @@ namespace JsonSchemaValidation.Test
             await using var inputDataStream = File.OpenRead(inputJson);
 
             // Act
-            var chunks = await _inputProcessor.ChunkInputAsync(inputDataStream, 2, CancellationToken.None).ToListAsync();
+            var chunks = await _inputProcessor.ChunkInputAsync(inputDataStream, CancellationToken.None).ToListAsync();
 
             // Assert
             Assert.IsEmpty(chunks);
-            _loggerMock.Verify(
+            _mockLogger.Verify(
                 logger => logger.Log(
                     LogLevel.Error,
                     It.IsAny<EventId>(),
@@ -135,7 +141,7 @@ namespace JsonSchemaValidation.Test
         {
             // Act & Assert
             Assert.ThrowsAsync<ArgumentNullException>(async () =>
-                await _inputProcessor.ChunkInputAsync(null, 2, CancellationToken.None).ToListAsync());
+                await _inputProcessor.ChunkInputAsync(null, CancellationToken.None).ToListAsync());
         }
 
         [Test]
@@ -151,7 +157,7 @@ namespace JsonSchemaValidation.Test
             // Act
             try
             {
-                await _inputProcessor.ChunkInputAsync(inputDataStream, 2, cts.Token).ToListAsync();
+                await _inputProcessor.ChunkInputAsync(inputDataStream, cts.Token).ToListAsync();
                 Assert.Fail("Expected TaskCanceledException was not thrown.");
             }
             catch (OperationCanceledException)

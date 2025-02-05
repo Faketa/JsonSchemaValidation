@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System.Runtime.CompilerServices;
 
@@ -11,10 +12,12 @@ namespace JsonSchemaValidation.Services;
 /// </summary>
 public class InputProcessor
 {
-    private readonly ILogger _logger;
+    private readonly ILogger<InputProcessor> _logger;
+    private readonly ValidationConfiguration _configuration;
 
-    public InputProcessor(ILogger logger)
+    public InputProcessor(IOptions<ValidationConfiguration> configuration, ILogger<InputProcessor> logger)
     {
+        _configuration = configuration.Value;
         _logger = logger;
     }
 
@@ -33,7 +36,7 @@ public class InputProcessor
     /// <exception cref="OperationCanceledException">Thrown when the operation is canceled.</exception>
     /// <exception cref="ArgumentNullException">Thrown when the inputDataStream is null.</exception>
     public async IAsyncEnumerable<List<Dictionary<string, string>>> ChunkInputAsync(
-        Stream inputDataStream, int chunkSize, [EnumeratorCancellation] CancellationToken cancellationToken)
+        Stream inputDataStream, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(inputDataStream);
 
@@ -65,7 +68,7 @@ public class InputProcessor
                         _logger.LogWarning($"Malformed record skipped: {ex.Message}");
                     }
 
-                    if (currentChunk.Count >= chunkSize)
+                    if (currentChunk.Count >= _configuration.ChunkSize)
                     {
                         yield return new List<Dictionary<string, string>>(currentChunk);
                         currentChunk.Clear();

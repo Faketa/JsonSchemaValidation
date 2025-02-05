@@ -12,20 +12,35 @@ namespace JsonSchemaValidation.Test
     [TestFixture]
     public class ChunkValidatorTest
     {
-        private Mock<ILogger> _mockLogger;
+        private Mock<ILogger<ChunkValidator>> _mockLogger;
+        private Mock<ConstraintValidator> _mockConstraintValidator;
         private ChunkValidator _chunkValidator;
-        private ConstraintValidator _constraintValidator;
 
         [SetUp]
         public void Setup()
         {
-            _mockLogger = new Mock<ILogger>();
-            _constraintValidator = new ConstraintValidator(new IValidationRule[]
-            {
-                new LengthValidationRule(),
-                new MandatoryValidationRule()
-            });
-            _chunkValidator = new ChunkValidator(_constraintValidator, _mockLogger.Object);
+            var mockMandatoryRule = new Mock<IValidationRule>();
+            mockMandatoryRule
+                .Setup(r => r.Validate(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<SchemaField>()))
+                .Returns((string field, string value, SchemaField schemaField) =>
+                    string.IsNullOrEmpty(value)
+                        ? ValidationResult.Failure(field, "Field is required.")
+                        : ValidationResult.Success(field));
+
+            var mockLengthRule = new Mock<IValidationRule>();
+            mockLengthRule
+                .Setup(r => r.Validate(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<SchemaField>()))
+                .Returns((string field, string value, SchemaField schemaField) =>
+                    value.Length > schemaField.Length
+                        ? ValidationResult.Failure(field, $"Field exceeds max length of {schemaField.Length}.")
+                        : ValidationResult.Success(field));
+
+            var validationRules = new List<IValidationRule> { mockMandatoryRule.Object, mockLengthRule.Object };
+
+            _mockConstraintValidator = new Mock<ConstraintValidator>(validationRules);
+            _mockLogger = new Mock<ILogger<ChunkValidator>>();
+
+            _chunkValidator = new ChunkValidator(_mockConstraintValidator.Object, _mockLogger.Object);
         }
 
         [Test]
@@ -63,7 +78,7 @@ namespace JsonSchemaValidation.Test
             Assert.That(results, Is.Not.Empty);
             Assert.That(results.First().IsValid, Is.False);
         }
-
+        
         [Test]
         public void ValidateChunk_EmptyChunk_ShouldReturnEmptyResults()
         {

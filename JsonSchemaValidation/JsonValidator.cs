@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using Microsoft.Extensions.Logging;
 using JsonSchemaValidation.Models;
 using JsonSchemaValidation.Services;
+using Microsoft.Extensions.Options;
 
 namespace JsonSchemaValidation;
 
@@ -12,29 +13,33 @@ namespace JsonSchemaValidation;
 public class JsonValidator
 {
     private readonly ValidationConfiguration _configuration;
-    private readonly ConstraintValidator _validationRules;
+    private readonly ConstraintValidator _constraintValidator;
     private readonly SchemaReader _schemaReader;
     private readonly InputProcessor _inputProcessor;
     private readonly ResultWriter _resultWriter;
     private readonly ChunkValidator _chunkValidator;
-    private readonly ILogger _logger;
+    private readonly ILogger<JsonValidator> _logger;
 
     /// <summary>
     /// Constructor
     /// </summary>
     /// <param name="configuration">Validation configuration</param>
     /// <param name="logger">Microsoft Logger</param>
-    public JsonValidator(ValidationConfiguration configuration, ILogger logger)
+    public JsonValidator(
+            IOptions<ValidationConfiguration> configuration,
+            ConstraintValidator constraintValidator,
+            SchemaReader schemaReader,
+            InputProcessor inputProcessor,
+            ResultWriter resultWriter,
+            ChunkValidator chunkValidator,
+            ILogger<JsonValidator> logger)
     {
-        ArgumentNullException.ThrowIfNull(configuration);
-        ArgumentNullException.ThrowIfNull(logger);
-
-        _configuration = configuration;
-        _validationRules = new ConstraintValidator(configuration.ValidationRules);
-        _schemaReader = new SchemaReader(logger);
-        _inputProcessor = new InputProcessor(logger);
-        _resultWriter = new ResultWriter(logger);
-        _chunkValidator = new ChunkValidator(_validationRules, logger);
+        _configuration = configuration.Value;
+        _constraintValidator = constraintValidator;
+        _schemaReader = schemaReader;
+        _inputProcessor = inputProcessor;
+        _resultWriter = resultWriter;
+        _chunkValidator = chunkValidator;
         _logger = logger;
     }
 
@@ -74,16 +79,20 @@ public class JsonValidator
         ArgumentNullException.ThrowIfNull(schemaStream);
         ArgumentNullException.ThrowIfNull(inputStream);
 
+        _logger.LogInformation("Validation and processing of JSON started.");
+
         var schema = await _schemaReader.ReadSchemaAsync(schemaStream, cancellationToken);
 
         var results = new List<ValidationResult>();
 
-        await foreach (var chunk in _inputProcessor.ChunkInputAsync(inputStream, _configuration.ChunkSize, cancellationToken))
+        await foreach (var chunk in _inputProcessor.ChunkInputAsync(inputStream, cancellationToken))
         {
             var validatedChunk = _chunkValidator.ValidateChunk(chunk, schema);
             results.AddRange(validatedChunk);
         }
 
         await _resultWriter.WriteResultsAsync(outputPath, results, cancellationToken);
+
+        _logger.LogInformation("Validation and processing completed.");
     }
 }

@@ -21,8 +21,8 @@
   },
   {
     "Field": "age",
-    "IsValid": true,
-    "ErrorMessage": null
+    "IsValid": false,
+    "ErrorMessage": "Field exceeds maximum length of 3."
   },
   {
     "Field": "name",
@@ -36,8 +36,8 @@
   },
   {
     "Field": "age",
-    "IsValid": false,
-    "ErrorMessage": "Field exceeds maximum length of 3."
+    "IsValid": true,
+    "ErrorMessage": null
   },
   {
     "Field": "name",
