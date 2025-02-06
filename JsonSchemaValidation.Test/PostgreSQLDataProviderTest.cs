@@ -23,7 +23,7 @@ public class PostgreSQLDataProviderTest
     {
         _mockLogger = new Mock<ILogger<PostgreSQLDataProvider>>();
         _mockConfig = new Mock<IOptions<ValidationConfiguration>>();
-        _mockConfig.Setup(c => c.Value).Returns(new ValidationConfiguration { ConnectionString = "Host=postgre-caesar.postgres.database.azure.com;Username=caesar;Password=n_rf]5#W8U^MZ<~uK%'=E};Database=postgres;Port=5432" });
+        _mockConfig.Setup(c => c.Value).Returns(new ValidationConfiguration { ConnectionString = "Host=host;Username=user;Password=pass;Database=postgres;Port=5432" });
         _dataProvider = new PostgreSQLDataProvider(_mockConfig.Object, _mockLogger.Object);
     }
 
@@ -45,7 +45,7 @@ public class PostgreSQLDataProviderTest
     public async Task ReadJsonDataAsync_DatabaseDoesNotExist_ShouldThrowException()
     {
         var failingConfig = new Mock<IOptions<ValidationConfiguration>>();
-        failingConfig.Setup(c => c.Value).Returns(new ValidationConfiguration { ConnectionString = "Host=postgre-caesar.postgres.database.azure.com;Username=caesar;Password=n_rf]5#W8U^MZ<~uK%'=E};Database=wrong_database;Port=5432" });
+        failingConfig.Setup(c => c.Value).Returns(new ValidationConfiguration { ConnectionString = "Host=host;Username=user;Password=pass;Database=wrong_database;Port=5432" });
         var failingProvider = new PostgreSQLDataProvider(failingConfig.Object, _mockLogger.Object);
 
         var tableName = "Custom";
@@ -58,7 +58,7 @@ public class PostgreSQLDataProviderTest
     public async Task ReadJsonDataAsync_ConnectionWrongHost_ShouldThrowException()
     {
         var failingConfig = new Mock<IOptions<ValidationConfiguration>>();
-        failingConfig.Setup(c => c.Value).Returns(new ValidationConfiguration { ConnectionString = "Host=wrong_host;Username=caesar;Password=n_rf]5#W8U^MZ<~uK%'=E};Database=wrong_database;Port=5432" });
+        failingConfig.Setup(c => c.Value).Returns(new ValidationConfiguration { ConnectionString = "Host=wrong_host;Username=user;Password=pass;Database=wrong_database;Port=5432" });
         var failingProvider = new PostgreSQLDataProvider(failingConfig.Object, _mockLogger.Object);
 
         var tableName = "Custom";
