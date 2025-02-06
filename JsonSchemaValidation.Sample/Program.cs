@@ -27,13 +27,13 @@ try
     var cancellationTokenSource = new CancellationTokenSource();
     var cancellationToken = cancellationTokenSource.Token;
 
-    await validator.ValidateAsync($"{testFilesPath}schema.json", "Custom", "data", $"{testFilesPath}output.json", cancellationToken);
+    await validator.ValidateAsync($"{testFilesPath}schema.json", "Custom", "data", $"{testFilesPath}output-postgresql.json", cancellationToken);
 }
 catch (Exception ex)
 {
     Console.WriteLine($"An error occurred in the application: {ex.Message}");
 }
-
+/*
 //Validate JSON one object
 try
 {
@@ -85,3 +85,4 @@ catch (Exception ex)
 {
     Console.WriteLine($"An error occurred in the application: {ex.Message}");
 }
+*/
