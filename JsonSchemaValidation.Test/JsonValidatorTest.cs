@@ -24,6 +24,7 @@ namespace JsonSchemaValidation.Test
         private Mock<InputProcessor> _mockInputProcessor;
         private Mock<ResultWriter> _mockResultWriter;
         private Mock<ChunkValidator> _mockChunkValidator;
+        private Mock<PostgreSQLDataProvider> _mockPostgreSQLDataProvider;
         private Mock<ILogger<JsonValidator>> _mockLogger;
         private Mock<IOptions<ValidationConfiguration>> _mockConfig;
         private JsonValidator _jsonValidator;
@@ -58,6 +59,7 @@ namespace JsonSchemaValidation.Test
             _mockInputProcessor = new Mock<InputProcessor>(Mock.Of<IOptions<ValidationConfiguration>>(), Mock.Of<ILogger<InputProcessor>>());
             _mockResultWriter = new Mock<ResultWriter>(Mock.Of<ILogger<ResultWriter>>());
             _mockChunkValidator = new Mock<ChunkValidator>(_mockConstraintValidator.Object, Mock.Of<ILogger<ChunkValidator>>());
+            _mockPostgreSQLDataProvider = new Mock<PostgreSQLDataProvider>(Mock.Of<IOptions<ValidationConfiguration>>(), Mock.Of<ILogger<PostgreSQLDataProvider>>());
             _mockLogger = new Mock<ILogger<JsonValidator>>();
             _mockConfig = new Mock<IOptions<ValidationConfiguration>>();
             _mockConfig.Setup(c => c.Value).Returns(new ValidationConfiguration { ChunkSize = 2 });
@@ -69,6 +71,7 @@ namespace JsonSchemaValidation.Test
                 _mockInputProcessor.Object,
                 _mockResultWriter.Object,
                 _mockChunkValidator.Object,
+                _mockPostgreSQLDataProvider.Object,
                 _mockLogger.Object
             );
         }

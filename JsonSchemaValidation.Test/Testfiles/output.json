@@ -7,7 +7,7 @@
   {
     "Field": "age",
     "IsValid": false,
-    "ErrorMessage": "Field exceeds maximum length of 3."
+    "ErrorMessage": "Field exceeds max length of 3."
   },
   {
     "Field": "name",

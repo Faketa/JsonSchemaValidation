@@ -18,6 +18,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<InputProcessor>();
         services.AddSingleton<ResultWriter>();
         services.AddSingleton<ChunkValidator>();
+        services.AddSingleton<PostgreSQLDataProvider>();
         services.AddSingleton<JsonValidator>();
 
         //Logging

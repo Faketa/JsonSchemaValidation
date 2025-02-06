@@ -11,6 +11,11 @@ public class ValidationConfiguration
     public int ChunkSize { get; set; } = 100;
 
     /// <summary>
+    /// Gets or sets the connection string to PostgreSQL database
+    /// </summary>
+    public string ConnectionString { get; set; } = string.Empty;
+
+    /// <summary>
     /// Gets or sets the collection of validation rules to apply.
     /// </summary>
     public IEnumerable<IValidationRule> ValidationRules { get; set; } = Array.Empty<IValidationRule>();
